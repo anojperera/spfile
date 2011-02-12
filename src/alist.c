@@ -180,6 +180,17 @@ aNode* aList_Item(aNode** obj, unsigned int ix)
     return temp;
 }
 
+/* returns a void pointer to data type */
+void* aList_Item2(aNode** obj, unsigned int ix)
+{
+    aNode* temp = aList_Item(obj, ix);
+
+    if(!temp)
+	return temp->data;
+    else
+	return NULL;
+}
+
 /* display results */
 int aList_Display(aNode** obj,
 		  int s_flg,

@@ -51,6 +51,9 @@ extern "C" {
     /* retrieved an item from list */
     aNode* aList_Item(aNode** obj, unsigned int ix);
 
+    /* returns a void pointer to data */
+    void* aList_Item2(aNode** obj, unsigned int ix);
+
     /* aList Diaplay function shall scan through
        the list and call the function pointer.
        void* pointer is used for and the user is
