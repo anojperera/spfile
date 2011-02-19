@@ -12,19 +12,6 @@
 
 typedef struct _spline spline;
 
-struct _spline
-{
-    char* var_line;
-    char* var_mline;
-
-    char* var_ref;
-    char* var_adrs;
-    /* char* var_name; */
-    char* var_value;
-    size_t var_line_sz;
-    size_t var_mline_sz;
-    size_t var_tvalue_sz;	/* true length until the end of line */
-};
 
 /* C functions */
 #ifdef __cplusplus

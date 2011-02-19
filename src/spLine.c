@@ -10,22 +10,36 @@
 #define CHR_NUM_START 48	/* ANSI 0 */
 #define CHR_NUM_END 57		/* ANSI 9 */
 
+struct _spline
+{
+    char* var_line;
+    char* var_mline;
+
+    char* var_ref;
+    char* var_adrs;
+    /* char* var_name; */
+    char* var_value;
+    size_t var_line_sz;
+    size_t var_mline_sz;
+    size_t var_tvalue_sz;	/* true length until the end of line */
+};
+
 /* private function */
-inline char* pr_spline_separate_string(const char* mstr,		/* main string */
+static inline char* pr_spline_separate_string(const char* mstr,	/* main string */
 				const unsigned int* cnt,	/* counter */
-				char** ostr,		/* out string */
+				char** ostr,			/* out string */
 				unsigned int* ocnt);
 
-inline int pr_spline_cmp_mline(char** mstr,	/* main buffer */
+static inline int pr_spline_cmp_mline(char** mstr,		/* main buffer */
 			       size_t sz,		/* size of buffer */
 			       unsigned int del_cnt,	/* delimiter count */
 			       size_t lsz,		/* line size */
 			       char** buff,		/* out buffer */
 			       unsigned int dil);	/* delimeter */
 
-inline int pr_get_value(spline** obj);
-inline int pr_get_ref(spline** obj);
-inline int pr_get_adrs(spline** obj);
+static inline int pr_get_value(spline** obj);
+static inline int pr_get_ref(spline** obj);
+static inline int pr_get_adrs(spline** obj);
 
 /* constructor */
 spline* spline_new()
@@ -176,6 +190,7 @@ int spline_run(spline* obj)
 	var_buff[i] = NULL;
 
     unsigned int icnt = 0;		/* internal function calendar */
+    
     /* call recursive function to separate texts */
     pr_spline_separate_string(obj->var_line,
 			      &spc_num,
