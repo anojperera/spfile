@@ -5,6 +5,7 @@
 
 #define SPS_LINEFEED "\n"
 
+
 /* callback function construct buffer */
 static int pr_gen_buff(void* obj, void* data, unsigned int ix)
 {

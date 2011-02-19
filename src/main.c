@@ -180,7 +180,7 @@ int main(int argc, char** argv)
     /* set out file name */
     spfile_set_outpath(fp, ofile);
 
-    start = clock();
+
     /* read file */
     spfile_read(fp);
 
@@ -199,6 +199,25 @@ int main(int argc, char** argv)
     /* char ch[2]; */
     /* printf("%s", "press any key: "); */
     /* scanf("%c", ch); */
+    time_t st;
+    time_t et;
+    double t = 0.0;
+    double l_t = 0.0;	/* last time */
+    time(&st);
+    while(1)
+	{
+	    time(&et);
+	    t = difftime(et, st);
+	    if(t > 3)
+		break;
+	    else if(l_t != t)
+		{
+    		    fflush(stdout);
+		    printf ("%f\n",t);
+		}
+
+	    l_t = t;
+	}
     return rt_val;
 }
 

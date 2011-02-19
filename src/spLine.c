@@ -4,25 +4,12 @@
 #include "spLine.h"
 
 #define SP_FIRST_TAG "INV"
-#define SP_DELIMITER 32
+#define SP_DELIMITER 32		/* space delimiter */
 #define SP_CSVDELIMTER 44
 
 #define CHR_NUM_START 48	/* ANSI 0 */
 #define CHR_NUM_END 57		/* ANSI 9 */
 
-struct _spline
-{
-    char* var_line;
-    char* var_mline;
-
-    char* var_ref;
-    char* var_adrs;
-    /* char* var_name; */
-    char* var_value;
-    size_t var_line_sz;
-    size_t var_mline_sz;
-    size_t var_tvalue_sz;	/* true length until the end of line */
-};
 
 /* private function */
 static inline char* pr_spline_separate_string(const char* mstr,	/* main string */
@@ -38,8 +25,9 @@ static inline int pr_spline_cmp_mline(char** mstr,		/* main buffer */
 			       unsigned int dil);	/* delimeter */
 
 static inline int pr_get_value(spline** obj);
-static inline int pr_get_ref(spline** obj);
-static inline int pr_get_adrs(spline** obj);
+static inline int pr_get_ref(spline** obj);		/* get reference number */
+static inline int pr_get_adrs(spline** obj);		/* get address */
+static inline int pr_get_hnum(spline** obj);		/* get house number */
 
 /* constructor */
 spline* spline_new()
@@ -57,6 +45,7 @@ spline* spline_new()
     tmp->var_mline = NULL;
     tmp->var_ref = NULL;
     tmp->var_adrs = NULL;
+    tmp->var_hnum = NULL;
     /* tmp->var_name = NULL; */
     tmp->var_value = NULL;
     tmp->var_line_sz = 0;
@@ -89,6 +78,12 @@ void spline_delete(spline** obj)
 	{
 	    free((*obj)->var_ref);
 	    (*obj)->var_ref = NULL;
+	}
+
+    if((*obj)->var_hnum)
+	{
+	    free((*obj)->var_hnum);
+	    (*obj)->var_hnum = NULL;
 	}
 
     if((*obj)->var_adrs)
@@ -239,7 +234,8 @@ int spline_run2(spline* obj)
     /* separate values */
     if(pr_get_value(&obj) == 0 ||
        pr_get_ref(&obj) == 0 ||
-       pr_get_adrs(&obj) == 0)
+       pr_get_adrs(&obj) == 0 ||
+       pr_get_hnum(&obj) == 0)
 	return 0;
 
     char t_ch[2] = {',', '\0'};
@@ -247,12 +243,15 @@ int spline_run2(spline* obj)
     size_t r_l = 0;		/* ref length */
     size_t a_l = 0;		/* addess length */
     size_t v_l = 0;		/* value length */
+    size_t h_l = 0;		/* house number */
 
     r_l = strlen(obj->var_ref);
     a_l = strlen(obj->var_adrs);
     v_l = strlen(obj->var_value);
+    h_l = strlen(obj->var_hnum);
+    
 
-    if(r_l == 0 || a_l == 0 || v_l == 0)
+    if(r_l == 0 || a_l == 0 || v_l == 0 || h_l == 0)
 	return 0;
 
     /* check pointer */
@@ -260,16 +259,19 @@ int spline_run2(spline* obj)
 	free(obj->var_mline);
 
     /* work out string size */
-    obj->var_mline_sz = r_l + a_l + v_l + 2;
+    obj->var_mline_sz = r_l + a_l + v_l + h_l + 3;
     /* add string */
     obj->var_mline = (char*)
 	malloc(sizeof(char) * (obj->var_mline_sz + 1));
     strcpy(obj->var_mline, obj->var_ref);	/* reference */
     strcat(obj->var_mline, t_ch);		/* , */
+    strcat(obj->var_mline, obj->var_hnum);	/* house number */
+    strcat(obj->var_mline, t_ch);		/*, */    
     strcat(obj->var_mline, obj->var_adrs);	/* address */
     strcat(obj->var_mline, t_ch);		/* , */
     strcat(obj->var_mline, obj->var_value);	/* value */
     /* strcat(obj->var_mline, "\n"); */
+    printf ("%s\n", obj->var_mline);
     
     return obj->var_mline_sz;
 }
@@ -566,4 +568,92 @@ int pr_get_adrs(spline** obj)
     free(t_ch);
     
     return e_spc - s_spc;
+}
+
+/* Separate house number by scanning address field */
+int pr_get_hnum(spline** obj)
+{
+    /* check for object pointer */
+    if(!obj || !(*obj))
+	return 0;
+
+    /* check for address pointer */
+    if(!(*obj)->var_adrs)
+	return 0;
+    
+    unsigned int n_flg = 0;	/* flag to indicate number found */
+    unsigned int c_flg = 0;	/* complete flag */
+    unsigned int j, i;		/* counters */
+
+    const char* t_chr = (*obj)->var_adrs;
+
+    /* get string length */
+    size_t adr_len = strlen(t_chr);
+    size_t hnum_sz = 0;		/* house number count */
+    
+    for(j = 0; j < 2; j++)
+	{
+	    for(i = 0; i < adr_len; i++)
+		{
+		    /* c flag is checked so that continuous
+		     * checking for numbers is prevented.
+		     * further more only the first digit is
+		     * considered house number */
+
+		    
+		    if(((t_chr[i] >= CHR_NUM_START &&
+			 t_chr[i] <= CHR_NUM_END &&
+			 c_flg == 0) || (n_flg > 0)) &&
+		       t_chr[i] != SP_DELIMITER)
+			{
+			    n_flg = 1;
+			    
+			    /* copy characters if
+			     * second iteration */
+			    if(j > 0)
+				{
+				    memcpy(&(*obj)->var_hnum[hnum_sz],
+					   &t_chr[i],
+					   sizeof(char));
+				}
+			    
+			    hnum_sz++;
+			    
+			}
+
+		    /* When subsequent space delimeter is found
+		     * terminate all counting */
+		    if(n_flg > 0 &&
+		       t_chr[i] == SP_DELIMITER)
+			{
+			    n_flg = 0;
+			    c_flg = 1;
+
+			    if(j > 0)
+				{
+				    /* add null pointer */
+				    (*obj)->var_hnum[hnum_sz] = '\0';
+				    break;
+				}
+			    else
+				break;
+			}
+		    
+		}
+
+	    /* create buffer to hold house number */
+	    if(j == 0 && hnum_sz > 0)
+		{
+		    (*obj)->var_hnum = (char*)
+			malloc(sizeof(char) * hnum_sz);
+		}
+
+	    /* zero counters */
+	    if(j == 0)
+		hnum_sz = 0;
+	    
+	    c_flg = 0;
+	}
+
+    return (int) hnum_sz;
 }
