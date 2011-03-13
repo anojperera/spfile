@@ -204,6 +204,12 @@ int main(int argc, char** argv)
     double t = 0.0;
     double l_t = 0.0;	/* last time */
     time(&st);
+    char* buff = (char*) malloc(sizeof(double) * sizeof(char));
+    fpos_t pos;	     	/* file position */
+
+    /* get position */
+    fgetpos(stdout, &pos);
+    
     while(1)
 	{
 	    time(&et);
@@ -212,8 +218,9 @@ int main(int argc, char** argv)
 		break;
 	    else if(l_t != t)
 		{
-    		    fflush(stdout);
-		    printf ("%f\n",t);
+		    sprintf(buff, "%f", t);
+		    fputs(buff, stdout);
+		    fsetpos(stdout, &pos);
 		}
 
 	    l_t = t;
